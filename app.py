@@ -4,11 +4,15 @@ import requests
 from flask_mail import Mail, Message
 from dotenv import load_dotenv
 import os
+from flask_cors import CORS
+import requests
+from flask import Response
 
 load_dotenv()
 
 app = Flask(__name__)
 swagger = Swagger(app) 
+CORS(app)
 
 app.config.update(
     dict(
@@ -132,6 +136,17 @@ def sendNotification():
 
 
     return {"mensaje": "La notificacion fue enviada correctamente"}, 200
+
+@app.route("/proxy-image/<filename>")
+def proxy_image(filename):
+    url = f"http://localhost:5000/api/uploads/{filename}"
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        return Response(response.content, content_type=response.headers['Content-Type'])
+    else:
+        return "Imagen no encontrada", 404
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
