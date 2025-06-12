@@ -139,6 +139,35 @@ def sendNotification():
 
 @app.route("/proxy-image/<filename>")
 def proxy_image(filename):
+    """
+    Retrieve and proxy an image by filename
+    ---
+    parameters:
+        - in: path
+          name: filename
+          required: true
+          schema:
+            type: string
+          description: The name of the image file to retrieve.
+    responses:
+        200:
+            description: Image returned successfully
+            content:
+              image/png:
+                schema:
+                  type: string
+                  format: binary
+              image/jpeg:
+                schema:
+                  type: string
+                  format: binary
+              image/jpg:
+                schema:
+                  type: string
+                  format: binary
+        404:
+            description: Image not found
+    """
     url = f"http://localhost:5000/api/uploads/{filename}"
     response = requests.get(url)
 
@@ -146,6 +175,7 @@ def proxy_image(filename):
         return Response(response.content, content_type=response.headers['Content-Type'])
     else:
         return "Imagen no encontrada", 404
+
 
 
 if __name__ == "__main__":
