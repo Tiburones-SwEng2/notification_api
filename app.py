@@ -117,7 +117,7 @@ def sendNotification():
 
     msg = Message(
         subject="¡Alguien está interesado en tu donación!",
-        sender="from@example.com",
+        sender=os.getenv('MAIL_USERNAME'),
         recipients=[email],
         body=f"""Hola, ¡alguien se ha interesado en una de tus donaciones! En los próximos días, la persona interesada se pondrá en contacto contigo para coordinar la entrega. ¡Gracias por tu generosidad!
         
