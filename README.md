@@ -83,3 +83,15 @@ Body:
   "mensaje": "La notificacion fue enviada correctamente"
 }
 ```
+
+### GET /proxy-image/{filename}
+
+Encargado de obtener las imagenes asociadas a cada donación.
+
+#### Ejemplo
+
+URL: http://localhost:5001/proxy-image/donacion
+
+### Respuesta
+
+La respuesta contendría la imagen con el nombre indicado en la URL.
