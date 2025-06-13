@@ -4,11 +4,15 @@ import requests
 from flask_mail import Mail, Message
 from dotenv import load_dotenv
 import os
+from flask_cors import CORS
+import requests
+from flask import Response
 
 load_dotenv()
 
 app = Flask(__name__)
 swagger = Swagger(app) 
+CORS(app)
 
 app.config.update(
     dict(
@@ -113,7 +117,7 @@ def sendNotification():
 
     msg = Message(
         subject="¡Alguien está interesado en tu donación!",
-        sender="from@example.com",
+        sender=os.getenv('MAIL_USERNAME'),
         recipients=[email],
         body=f"""Hola, ¡alguien se ha interesado en una de tus donaciones! En los próximos días, la persona interesada se pondrá en contacto contigo para coordinar la entrega. ¡Gracias por tu generosidad!
         
@@ -132,6 +136,47 @@ def sendNotification():
 
 
     return {"mensaje": "La notificacion fue enviada correctamente"}, 200
+
+@app.route("/proxy-image/<filename>")
+def proxy_image(filename):
+    """
+    Retrieve and proxy an image by filename
+    ---
+    parameters:
+        - in: path
+          name: filename
+          required: true
+          schema:
+            type: string
+          description: The name of the image file to retrieve.
+    responses:
+        200:
+            description: Image returned successfully
+            content:
+              image/png:
+                schema:
+                  type: string
+                  format: binary
+              image/jpeg:
+                schema:
+                  type: string
+                  format: binary
+              image/jpg:
+                schema:
+                  type: string
+                  format: binary
+        404:
+            description: Image not found
+    """
+    url = f"http://localhost:5000/api/uploads/{filename}"
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        return Response(response.content, content_type=response.headers['Content-Type'])
+    else:
+        return "Imagen no encontrada", 404
+
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
