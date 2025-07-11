@@ -7,12 +7,15 @@ import os
 from flask_cors import CORS
 import requests
 from flask import Response
+from flask_jwt_extended import jwt_required, JWTManager
 
 load_dotenv()
 
 app = Flask(__name__)
 swagger = Swagger(app) 
 CORS(app)
+app.config["JWT_SECRET_KEY"] = "lkhjap8gy2p 03kt"
+jwt = JWTManager(app)
 
 app.config.update(
     dict(
@@ -28,11 +31,18 @@ app.config.update(
 mail = Mail(app)
 
 @app.route('/filteredDonations', methods=['GET'])
+@jwt_required()
 def getFilteredDonations():
     """
     List the donations with applied filters
     ---
     parameters:
+        - in : header
+          name: Authorization
+          required: true
+          type: string
+          description: "Formato: Bearer [Token]"
+          
         - in: query
           name: category 
           schema:
@@ -76,11 +86,19 @@ def getFilteredDonations():
     return filtered_donations, 200
 
 @app.route('/sendNotification', methods=['POST'])
+@jwt_required()
 def sendNotification():
     """
     Send a notification to the donor saying someone is interested in their donation
     ---
+            
     parameters:
+        - in : header
+          name: Authorization
+          required: true
+          type: string
+          description: "Formato: Bearer [Token]"
+            
         - in: body
           name: donation_information
           schema:
@@ -138,11 +156,18 @@ def sendNotification():
     return {"mensaje": "La notificacion fue enviada correctamente"}, 200
 
 @app.route("/proxy-image/<filename>")
+@jwt_required()
 def proxy_image(filename):
     """
     Busca y envia una imagen que tenga el nombre indicado en el parametro filename
     ---
     parameters:
+        - in : header
+          name: Authorization
+          required: true
+          type: string
+          description: "Formato: Bearer [Token]"
+
         - in: path
           name: filename
           required: true
@@ -169,7 +194,13 @@ def proxy_image(filename):
             description: Imagen no encontrada
     """
     url = f"http://localhost:5000/api/uploads/{filename}"
-    response = requests.get(url)
+    token = request.headers.get("Authorization")
+
+    headers = {
+        "Authorization": token
+    }
+
+    response = requests.get(url, headers=headers)
 
     if response.status_code == 200:
         return Response(response.content, content_type=response.headers['Content-Type'])
