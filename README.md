@@ -37,6 +37,10 @@ Encargado de mostrar las donaciones haciendo uso de filtros. Los filtros son ent
 
 #### Ejemplo
 
+Header:
+
+Authorization: Bearer [Token de acceso]
+
 URL: http://127.0.0.1:5001/filteredDonations?city=Manizales
 
 ##### Respuesta
@@ -66,6 +70,10 @@ Encargado de enviar notificaciones a los donadores cuando alguien esta interesad
 
 URL: http://localhost:5001/sendNotification
 
+Header:
+
+Authorization: Bearer [Token de acceso]
+
 Body:
 
 ```json
@@ -89,6 +97,10 @@ Body:
 Encargado de obtener las imagenes asociadas a cada donación.
 
 #### Ejemplo
+
+Header:
+
+Authorization: Bearer [Token de acceso]
 
 URL: http://localhost:5001/proxy-image/donacion
 
