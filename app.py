@@ -42,7 +42,7 @@ def getFilteredDonations():
           required: true
           type: string
           description: "Formato: Bearer [Token]"
-          
+
         - in: query
           name: category 
           schema:
@@ -69,10 +69,18 @@ def getFilteredDonations():
     city = request.args.get("city")
     condition = request.args.get("condition")
 
-    donations = requests.get("http://localhost:5000/api/donations").json()
+    token = request.headers.get("Authorization")
+
+    headers = {
+        "Authorization": token
+    }
+
+    url = "http://localhost:5000/api/donations"
+
+    donations = requests.get(url, headers=headers).json()
+
 
     filtered_donations = []
-
     for donation in donations:
         if category and donation["category"] != category:
             continue
