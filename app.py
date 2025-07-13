@@ -13,7 +13,7 @@ load_dotenv()
 
 app = Flask(__name__)
 swagger = Swagger(app) 
-CORS(app)
+CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
 app.config["JWT_SECRET_KEY"] = "lkhjap8gy2p 03kt"
 jwt = JWTManager(app)
 
@@ -164,7 +164,7 @@ def sendNotification():
     return {"mensaje": "La notificacion fue enviada correctamente"}, 200
 
 @app.route("/proxy-image/<filename>")
-@jwt_required()
+#@jwt_required()
 def proxy_image(filename):
     """
     Busca y envia una imagen que tenga el nombre indicado en el parametro filename
@@ -202,13 +202,13 @@ def proxy_image(filename):
             description: Imagen no encontrada
     """
     url = f"http://localhost:5000/api/uploads/{filename}"
-    token = request.headers.get("Authorization")
+    #token = request.headers.get("Authorization")
 
-    headers = {
-        "Authorization": token
-    }
+    # headers = {
+    #     "Authorization": token
+    # }
 
-    response = requests.get(url, headers=headers)
+    response = requests.get(url)
 
     if response.status_code == 200:
         return Response(response.content, content_type=response.headers['Content-Type'])
