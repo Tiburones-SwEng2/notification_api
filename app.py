@@ -8,6 +8,9 @@ from flask_cors import CORS
 import requests
 from flask import Response
 from flask_jwt_extended import jwt_required, JWTManager
+from prometheus_client import Counter, Histogram, generate_latest
+import time
+from functools import wraps
 
 load_dotenv()
 
@@ -30,8 +33,40 @@ app.config.update(
 
 mail = Mail(app)
 
+# MÉTRICAS
+REQUEST_COUNT = Counter('notification_http_requests_total', 'Total Requests', ['method', 'endpoint'])
+REQUEST_LATENCY = Histogram('notification_http_request_duration_seconds', 'Request Latency', ['endpoint'])
+ERROR_COUNT = Counter('notification_http_request_errors_total', 'Total Errors', ['endpoint'])
+
+def monitor_metrics(f):
+    """Decorador para monitorear métricas de Prometheus"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        start_time = time.time()
+        endpoint = request.endpoint or 'unknown'
+        method = request.method
+        
+        # Incrementar contador de requests
+        REQUEST_COUNT.labels(method=method, endpoint=endpoint).inc()
+        
+        try:
+            # Ejecutar la función
+            response = f(*args, **kwargs)
+            return response
+        except Exception as e:
+            # Incrementar contador de errores
+            ERROR_COUNT.labels(endpoint=endpoint).inc()
+            raise
+        finally:
+            # Medir latencia
+            duration = time.time() - start_time
+            REQUEST_LATENCY.labels(endpoint=endpoint).observe(duration)
+    
+    return decorated_function
+
 @app.route('/filteredDonations', methods=['GET'])
 @jwt_required()
+@monitor_metrics
 def getFilteredDonations():
     """
     List the donations with applied filters
@@ -95,6 +130,7 @@ def getFilteredDonations():
 
 @app.route('/sendNotification', methods=['POST'])
 @jwt_required()
+@monitor_metrics
 def sendNotification():
     """
     Send a notification to the donor saying someone is interested in their donation
@@ -164,7 +200,8 @@ def sendNotification():
     return {"mensaje": "La notificacion fue enviada correctamente"}, 200
 
 @app.route("/proxy-image/<filename>")
-#@jwt_required()
+@jwt_required()
+@monitor_metrics
 def proxy_image(filename):
     """
     Busca y envia una imagen que tenga el nombre indicado en el parametro filename
@@ -214,6 +251,23 @@ def proxy_image(filename):
         return Response(response.content, content_type=response.headers['Content-Type'])
     else:
         return "Imagen no encontrada", 404
+
+@app.route("/metrics", methods=["GET"])
+def metrics():
+    """
+    Endpoint para exponer métricas de Prometheus
+    ---
+    tags:
+      - Métricas
+    responses:
+      200:
+        description: Métricas de Prometheus
+        content:
+          text/plain:
+            schema:
+              type: string
+    """
+    return generate_latest(), 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
 
 
