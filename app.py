@@ -181,9 +181,10 @@ def sendNotification():
         subject="¡Alguien está interesado en tu donación!",
         sender=os.getenv('MAIL_USERNAME'),
         recipients=[email],
-        body=f"""Hola, ¡alguien se ha interesado en una de tus donaciones! En los próximos días, la persona interesada se pondrá en contacto contigo para coordinar la entrega. ¡Gracias por tu generosidad!
-        
-        Descripcion del producto: {data["description"]}"""
+        body=f"""Hola, ¡alguien se ha interesado en una de tus donaciones! Por favor, contacta con la persona interesada para coordinar la entrega. ¡Gracias por tu generosidad!
+        Identificacion del producto: {data["id"]}
+        Descripcion del producto: {data["description"]}
+        email del interesado: {data["claimer_email"]}"""
     )
 
     try:
@@ -239,13 +240,13 @@ def proxy_image(filename):
             description: Imagen no encontrada
     """
     url = f"http://localhost:5000/api/uploads/{filename}"
-    #token = request.headers.get("Authorization")
+    token = request.headers.get("Authorization")
 
-    # headers = {
-    #     "Authorization": token
-    # }
+    headers = {
+        "Authorization": token
+    }
 
-    response = requests.get(url)
+    response = requests.get(url, headers=headers)
 
     if response.status_code == 200:
         return Response(response.content, content_type=response.headers['Content-Type'])
